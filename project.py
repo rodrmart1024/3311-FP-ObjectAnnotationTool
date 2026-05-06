@@ -14,7 +14,31 @@ class CurveBookmarkManager(QtWidgets.QDialog):
         '''Creating the Window and calling out to functions'''
         super().__init__(parent=get_maya_main_window())
         self.setWindowTitle("Curve Bookmark Manager")
-        self.resize(600, 600)
+        self.resize(800, 800)
+        window_layout = QtWidgets.QHBoxLayout(self)
+
+        left_pannel = QtWidgets.QWidget()
+        left_pannel,self.setFixedWidth(200)
+        self.left_layout = QtWidgets.QVBoxLayout(left_pannel)
+        window_layout.addWidget(left_pannel)
+
+        right_pannel = QtWidgets.QWidget()
+        self.right_layout = QtWidgets.QVBoxLayout(right_pannel)
+        window_layout.addWidget(right_pannel)
+
+        self.curve_list_ui()
+
+    def curve_list_ui(self):
+        '''Creates the list of curves on the left pannel'''
+        curve_group = QtWidgets.QGroupBox('Curves:')
+        curve_layout = QtWidgets.QVBoxLayout()
+
+        self.curve_list = QtWidgets.QListWidget()
+        curve_layout.addWidget(self.curve_list)
+
+        curve_group.setLayout(curve_layout)
+        self.left_layout.addWidget(curve_group)
+
 
 def show_ui():
     ui = CurveBookmarkManager()
