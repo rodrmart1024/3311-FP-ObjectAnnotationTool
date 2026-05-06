@@ -27,9 +27,10 @@ class CurveBookmarkManager(QtWidgets.QDialog):
         window_layout.addWidget(right_pannel)
 
         self.curve_list_ui()
+        self.loadup_curve_list()
 
     def curve_list_ui(self):
-        '''Creates the list of curves on the left pannel'''
+        '''Creates the pannel for curves on the leff'''
         curve_group = QtWidgets.QGroupBox('Curves:')
         curve_layout = QtWidgets.QVBoxLayout()
 
@@ -38,6 +39,17 @@ class CurveBookmarkManager(QtWidgets.QDialog):
 
         curve_group.setLayout(curve_layout)
         self.left_layout.addWidget(curve_group)
+
+    def loadup_curve_list(self):
+        '''Loads the curves in the scene into the pannel'''
+        self.curve_list.clear()
+
+        shape_node = cmds.ls(type="nurbsCurve")
+        transform_node = cmds.listRelatives(shape_node, parent=True)
+        transform_node = sorted(set(transform_node))
+
+        for curve_name in transform_node:
+            self.curve_list.addItem(curve_name)
 
 
 def show_ui():
