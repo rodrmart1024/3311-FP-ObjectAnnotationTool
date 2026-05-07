@@ -18,7 +18,7 @@ class CurveBookmarkManager(QtWidgets.QDialog):
         window_layout = QtWidgets.QHBoxLayout(self)
 
         left_pannel = QtWidgets.QWidget()
-        left_pannel,self.setFixedWidth(200)
+        left_pannel.setFixedWidth(200)
         self.left_layout = QtWidgets.QVBoxLayout(left_pannel)
         window_layout.addWidget(left_pannel)
 
@@ -26,6 +26,7 @@ class CurveBookmarkManager(QtWidgets.QDialog):
         self.right_layout = QtWidgets.QVBoxLayout(right_pannel)
         window_layout.addWidget(right_pannel)
 
+        self.selected_curve = None
         self.curve_list_ui()
         self.loadup_curve_list()
 
@@ -39,6 +40,7 @@ class CurveBookmarkManager(QtWidgets.QDialog):
 
         curve_group.setLayout(curve_layout)
         self.left_layout.addWidget(curve_group)
+        self.curve_list.itemClicked.connect(self.when_curve_selected)
 
     def loadup_curve_list(self):
         '''Loads the curves in the scene into the pannel'''
@@ -50,6 +52,34 @@ class CurveBookmarkManager(QtWidgets.QDialog):
 
         for curve_name in transform_node:
             self.curve_list.addItem(curve_name)
+    
+    def show_bookmark_view(self):
+        '''Wipes right panel and displays selected curve bookmarks'''
+        self.clear_right_panel()
+        curve_bookmark_header = QtWidgets.QLabel(f"{self.selected_curve} Bookmarks:")
+        self.right_layout.addWidget(curve_bookmark_header)
+
+        create_bookmark_button = QtWidgets.QPushButton("New Bookmark")
+        create_bookmark_button.clicked.connect(self.new_bookmark_form)
+        self.right_layout.addWidget(create_bookmark_button)
+        self.right_layout.addStretch()
+
+    def new_bookmark_form(self):
+        '''Creates a window for new bookmark information name, frames, desc'''
+        pass
+    
+    def when_curve_selected(self, item):
+        '''When a curve is selected it calls the bookmark view'''
+        self.selected_curve = item.text()
+        self.show_bookmark_view()
+
+    def clear_right_panel(self):
+        '''Removes all widgets on the rigtht panel'''
+        while self.right_layout.count():
+            bookmarks = self.right_layout.takeAt(0)
+            if bookmarks.widget():
+                bookmarks.widget().deleteLater()
+
 
 
 def show_ui():
