@@ -53,25 +53,60 @@ class CurveBookmarkManager(QtWidgets.QDialog):
         for curve_name in transform_node:
             self.curve_list.addItem(curve_name)
     
+    def when_curve_selected(self, item):
+        '''When a curve is selected it calls the bookmark view'''
+        self.selected_curve = item.text()
+        self.show_bookmark_view()
+   
     def show_bookmark_view(self):
         '''Wipes right panel and displays selected curve bookmarks'''
         self.clear_right_panel()
         curve_bookmark_header = QtWidgets.QLabel(f"{self.selected_curve} Bookmarks:")
         self.right_layout.addWidget(curve_bookmark_header)
 
-        create_bookmark_button = QtWidgets.QPushButton("New Bookmark")
-        create_bookmark_button.clicked.connect(self.new_bookmark_form)
-        self.right_layout.addWidget(create_bookmark_button)
+        new_bookmark_button = QtWidgets.QPushButton("New Bookmark")
+        new_bookmark_button.clicked.connect(self.new_bookmark_form)
+        self.right_layout.addWidget(new_bookmark_button)
         self.right_layout.addStretch()
 
     def new_bookmark_form(self):
         '''Creates a window for new bookmark information name, frames, desc'''
+        self.clear_right_panel()
+        form_group = QtWidgets.QGroupBox(f"Creating Bookmark for {self.selected_curve}")
+        form_layout = QtWidgets.QFormLayout()
+        form_layout.setSpacing(10)
+
+        self.bookmark_name_input = QtWidgets.QLineEdit()
+        form_layout.addRow("Bookmark Name: ", self.bookmark_name_input)
+
+        self.frames_input = QtWidgets.QSpinBox()
+        self.frames_input.setValue(int(cmds.currentTime(query=True)))
+        self.frames_input.setMinimum(-10000)
+        self.frames_input.setMaximum(10000)
+        form_layout.addRow("Frame or Frame Range: ", self.frames_input)
+
+        self.description_input = QtWidgets.QTextEdit()
+        self.description_input.setFixedHeight(80)
+        form_layout.addRow("Description: ", self.description_input) 
+
+        form_group.setLayout(form_layout)
+        self.right_layout.addWidget(form_group)
+
+        self.bookmark_form_buttons()
+        self.right_layout.addStretch()
+
+    def bookmark_form_buttons(self):
+        '''Creates the Buttons for the New Bookmark Form'''
+        create_bookmark_button = QtWidgets.QPushButton("Create Bookmark")
+        create_bookmark_button.clicked.connect(self.saving_bookmarks)
+        self.right_layout.addWidget(create_bookmark_button)
+
+        cancel_bookmark_button = QtWidgets.QPushButton("Cancel")
+        cancel_bookmark_button.clicked.connect(self.show_bookmark_view)
+        self.right_layout.addWidget(cancel_bookmark_button)
+
+    def saving_bookmarks(self):
         pass
-    
-    def when_curve_selected(self, item):
-        '''When a curve is selected it calls the bookmark view'''
-        self.selected_curve = item.text()
-        self.show_bookmark_view()
 
     def clear_right_panel(self):
         '''Removes all widgets on the rigtht panel'''
@@ -81,12 +116,9 @@ class CurveBookmarkManager(QtWidgets.QDialog):
                 bookmarks.widget().deleteLater()
 
 
-
 def show_ui():
     ui = CurveBookmarkManager()
     ui.show()
-
-show_ui()
 
 
 '''
