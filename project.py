@@ -15,6 +15,9 @@ class CurveBookmarkManager(QtWidgets.QDialog):
         super().__init__(parent=get_maya_main_window())
         self.setWindowTitle("Curve Bookmark Manager")
         self.resize(800, 800)
+        self.selected_curve = None
+        self.saved_bookmarks = {}
+
         window_layout = QtWidgets.QHBoxLayout(self)
 
         left_pannel = QtWidgets.QWidget()
@@ -26,7 +29,6 @@ class CurveBookmarkManager(QtWidgets.QDialog):
         self.right_layout = QtWidgets.QVBoxLayout(right_pannel)
         window_layout.addWidget(right_pannel)
 
-        self.selected_curve = None
         self.curve_list_ui()
         self.loadup_curve_list()
 
@@ -106,6 +108,24 @@ class CurveBookmarkManager(QtWidgets.QDialog):
         self.right_layout.addWidget(cancel_bookmark_button)
 
     def saving_bookmarks(self):
+        bookmark_name = self.bookmark_name_input.text().strip()
+        frames = self.frames_input.value()
+        description = self.description_input.toPlainText().strip()
+
+        if not bookmark_name:
+            QtWidgets.QMessageBox.warning(self, "Missing Name",
+                                          "Please enter bookmark name.")
+            return
+        
+        if self.selected_curve not in self.saved_bookmarks:
+            self.saved_bookmarks[self.selected_curve] = []
+        
+        self.saved_bookmarks[self.selected_curve].append(
+            {"name": bookmark_name, "frames": frames, "desc": description})
+        
+        self.show_bookmark_view()
+    
+    def show_bookmark_view(self):
         pass
 
     def clear_right_panel(self):
@@ -123,10 +143,7 @@ def show_ui():
 
 '''
 Creating the UI:
-Make two pannels with one having a seprate pop-up pannel.
-One Pannel = List if NURBS curves in the scene
 Second Pannel = View Selected Curve Bookmarks
-Second Pannel Pop-Uo = Create a New Bookmark of Selected Curve
 
 Creating the Logic:
 Get only curves to appear on the List.
