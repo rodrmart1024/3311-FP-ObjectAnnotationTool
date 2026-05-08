@@ -1,6 +1,8 @@
 import maya.cmds as cmds
 import maya.OpenMayaUI as omui
 import functools
+import json
+import os
 from PySide6 import QtWidgets, QtCore
 from shiboken6 import wrapInstance
 
@@ -170,6 +172,22 @@ class CurveBookmarkManager(QtWidgets.QDialog):
             if bookmarks.widget():
                 bookmarks.widget().deleteLater()
 
+    def json_path(self):
+        '''Find the path next to the Maya scene'''
+        maya_scene_path = cmds.file(query=True, sceneName=True)
+
+        if not maya_scene_path:
+            QtWidgets.QMessageBox.warning(self, "Unsaved Scene",
+                                          "Please save Maya Scene to store Bookmarks.")
+            return None
+        
+        scene_directory = os.path.dirname(maya_scene_path)
+        scene_name = os.path.splitext(os.path.basename(maya_scene_path))[0]
+        return os.path.join(scene_directory, f"{scene_name}_curve_bookmarks.json")
+    
+    def write_to_json(self):
+        pass
+
 
 def show_ui():
     ui = CurveBookmarkManager()
@@ -178,9 +196,6 @@ def show_ui():
 
 
 '''
-Creating the Logic:
-Bookedmaked Curves appear at the top of list while rest are sorted alpha.
-
 Persistence of Bookmarks:
 When Bookmark is saved use JSON write.
 Save the .json file next to maya scene.
