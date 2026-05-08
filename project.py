@@ -33,8 +33,9 @@ class CurveBookmarkManager(QtWidgets.QDialog):
         window_layout.addWidget(right_pannel)
 
         self.curve_list_ui()
-        self.loadup_curve_list()
         self.read_json()
+        self.loadup_curve_list()
+
 
     def curve_list_ui(self):
         '''Creates the pannel for curves on the leff'''
@@ -56,7 +57,16 @@ class CurveBookmarkManager(QtWidgets.QDialog):
         transform_node = cmds.listRelatives(shape_node, parent=True)
         transform_node = sorted(set(transform_node))
 
+        bookmarked = []
+        nonbookmarked= []
+
         for curve_name in transform_node:
+            if curve_name in self.saved_bookmarks:
+                bookmarked.append(curve_name)
+            else:
+                nonbookmarked.append(curve_name)
+
+        for curve_name in bookmarked + nonbookmarked:
             self.curve_list.addItem(curve_name)
     
     def when_curve_selected(self, item):
@@ -209,6 +219,9 @@ class CurveBookmarkManager(QtWidgets.QDialog):
             return
         
         if not os.path.exists(json_path):
+            return
+        
+        if os.path.getsize(json_path) == 0:
             return
         
         with open(json_path, "r") as json_file:
