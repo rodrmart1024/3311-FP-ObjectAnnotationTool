@@ -1,5 +1,6 @@
 import maya.cmds as cmds
 import maya.OpenMayaUI as omui
+import functools
 from PySide6 import QtWidgets, QtCore
 from shiboken6 import wrapInstance
 
@@ -89,13 +90,11 @@ class CurveBookmarkManager(QtWidgets.QDialog):
 
         button_actions = QtWidgets.QHBoxLayout()
         frame_jump_button = QtWidgets.QPushButton("Jump to Frame")
-        frame_jump_button.clicked.connect(lambda checked, bookmark=bookmark:
-                                          self.jump_to_frame(bookmark))
+        frame_jump_button.clicked.connect(functools.partial(self.jump_to_frame, bookmark))
         button_actions.addWidget(frame_jump_button)
 
         del_bookmark_button = QtWidgets.QPushButton("Delete Bookmark")
-        del_bookmark_button.clicked.connect(lambda checked, index=index:
-                                          self.delete_bookmark(index))
+        del_bookmark_button.clicked.connect(functools.partial(self.delete_bookmark, index))
         button_actions.addWidget(del_bookmark_button)
 
         card_layout.addLayout(button_actions)
