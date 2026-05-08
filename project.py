@@ -69,7 +69,46 @@ class CurveBookmarkManager(QtWidgets.QDialog):
         new_bookmark_button = QtWidgets.QPushButton("New Bookmark")
         new_bookmark_button.clicked.connect(self.new_bookmark_form)
         self.right_layout.addWidget(new_bookmark_button)
+
+        if self.selected_curve in self.saved_bookmarks:
+            for index, bookmark in enumerate(self.saved_bookmarks[self.selected_curve]):
+                self.bookmark_card_ui(bookmark, index)
+
         self.right_layout.addStretch()
+
+    def bookmark_card_ui(self, bookmark, index):
+        card_group = QtWidgets.QGroupBox(bookmark["name"])
+        card_layout = QtWidgets.QVBoxLayout()
+        
+        frame_label = QtWidgets.QLabel(f"{bookmark['frames']}")
+        card_layout.addWidget(frame_label)
+
+        description_label = QtWidgets.QLabel(f"{bookmark['desc']}")
+        description_label.setWordWrap(True)
+        card_layout.addWidget(description_label)
+
+        button_actions = QtWidgets.QHBoxLayout()
+        frame_jump_button = QtWidgets.QPushButton("Jump to Frame")
+        frame_jump_button.clicked.connect(lambda checked, bookmark=bookmark:
+                                          self.jump_to_frame(bookmark))
+        button_actions.addWidget(frame_jump_button)
+
+        del_bookmark_button = QtWidgets.QPushButton("Delete Bookmark")
+        del_bookmark_button.clicked.connect(lambda checked, index=index:
+                                          self.delete_bookmark(index))
+        button_actions.addWidget(del_bookmark_button)
+
+        card_layout.addLayout(button_actions)
+        card_group.setLayout(card_layout)
+        self.right_layout.addWidget(card_group)
+
+    def jump_to_frame(self, bookmark):
+        cmds.currentTime(bookmark["frames"])
+        cmds.select(self.selected_curve)
+
+    def delete_bookmark(self, index):
+        self.saved_bookmarks[self.selected_curve].pop(index)
+        self.show_bookmark_view()
 
     def new_bookmark_form(self):
         '''Creates a window for new bookmark information name, frames, desc'''
@@ -124,9 +163,6 @@ class CurveBookmarkManager(QtWidgets.QDialog):
             {"name": bookmark_name, "frames": frames, "desc": description})
         
         self.show_bookmark_view()
-    
-    def show_bookmark_view(self):
-        pass
 
     def clear_right_panel(self):
         '''Removes all widgets on the rigtht panel'''
@@ -139,17 +175,12 @@ class CurveBookmarkManager(QtWidgets.QDialog):
 def show_ui():
     ui = CurveBookmarkManager()
     ui.show()
+    return ui
 
 
 '''
-Creating the UI:
-Second Pannel = View Selected Curve Bookmarks
-
 Creating the Logic:
-Get only curves to appear on the List.
 Bookedmaked Curves appear at the top of list while rest are sorted alpha.
-Save frames to second pannel.
-When creating new Bookmark defualt current frame as saved frame on second pannel.
 
 Persistence of Bookmarks:
 When Bookmark is saved use JSON write.
