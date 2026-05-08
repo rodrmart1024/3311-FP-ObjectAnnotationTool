@@ -109,6 +109,7 @@ class CurveBookmarkManager(QtWidgets.QDialog):
 
     def delete_bookmark(self, index):
         self.saved_bookmarks[self.selected_curve].pop(index)
+        self.write_to_json()
         self.show_bookmark_view()
 
     def new_bookmark_form(self):
@@ -163,6 +164,7 @@ class CurveBookmarkManager(QtWidgets.QDialog):
         self.saved_bookmarks[self.selected_curve].append(
             {"name": bookmark_name, "frames": frames, "desc": description})
         
+        self.write_to_json()        
         self.show_bookmark_view()
 
     def clear_right_panel(self):
@@ -172,7 +174,7 @@ class CurveBookmarkManager(QtWidgets.QDialog):
             if bookmarks.widget():
                 bookmarks.widget().deleteLater()
 
-    def json_path(self):
+    def create_json_path(self):
         '''Find the path next to the Maya scene'''
         maya_scene_path = cmds.file(query=True, sceneName=True)
 
@@ -186,7 +188,14 @@ class CurveBookmarkManager(QtWidgets.QDialog):
         return os.path.join(scene_directory, f"{scene_name}_curve_bookmarks.json")
     
     def write_to_json(self):
-        pass
+        '''Writes to a JSON file saving the Bookmark information'''
+        jason_path = self.create_json_path()
+
+        if not jason_path:
+            return
+        
+        with open(jason_path, "w") as json__file:
+            json.dump(self.saved_bookmarks, json__file, indent=4)
 
 
 def show_ui():
