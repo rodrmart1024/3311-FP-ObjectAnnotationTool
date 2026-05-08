@@ -34,6 +34,7 @@ class CurveBookmarkManager(QtWidgets.QDialog):
 
         self.curve_list_ui()
         self.loadup_curve_list()
+        self.read_json()
 
     def curve_list_ui(self):
         '''Creates the pannel for curves on the leff'''
@@ -196,17 +197,21 @@ class CurveBookmarkManager(QtWidgets.QDialog):
         
         with open(jason_path, "w") as json__file:
             json.dump(self.saved_bookmarks, json__file, indent=4)
+    
+    def read_json(self):
+        json_path = self.create_json_path()
+
+        if not json_path:
+            return
+        
+        if not os.path.exists(json_path):
+            return
+        
+        with open(json_path, "r") as json_file:
+            self.saved_bookmarks = json.load(json_file)
 
 
 def show_ui():
     ui = CurveBookmarkManager()
     ui.show()
     return ui
-
-
-'''
-Persistence of Bookmarks:
-When Bookmark is saved use JSON write.
-Save the .json file next to maya scene.
-When scene is reopened JSON read.
-'''
