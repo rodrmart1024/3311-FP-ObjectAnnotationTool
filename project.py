@@ -110,6 +110,10 @@ class CurveBookmarkManager(QtWidgets.QDialog):
 
     def delete_bookmark(self, index):
         self.saved_bookmarks[self.selected_curve].pop(index)
+
+        if not self.saved_bookmarks[self.selected_curve]:
+            del self.saved_bookmarks[self.selected_curve]
+        
         self.write_to_json()
         self.show_bookmark_view()
 
