@@ -25,7 +25,6 @@ class CurveBookmarkManager(QtWidgets.QDialog):
         window_layout = QtWidgets.QHBoxLayout(self)
 
         left_panel = QtWidgets.QWidget()
-        left_panel.setFixedWidth(200)
         self.left_layout = QtWidgets.QVBoxLayout(left_panel)
         window_layout.addWidget(left_panel)
 
