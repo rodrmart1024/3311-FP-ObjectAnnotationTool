@@ -3,10 +3,11 @@ import maya.OpenMayaUI as omui
 import functools
 import json
 import os
-from PySide6 import QtWidgets, QtCore
+from PySide6 import QtWidgets
 from shiboken6 import wrapInstance
 
 def get_maya_main_window():
+    '''Returns Mayas Window for Parenting'''
     main_win_address = omui.MQtUtil.mainWindow()
     return wrapInstance(int(main_win_address), QtWidgets.QWidget)
 
@@ -14,7 +15,7 @@ def get_maya_main_window():
 class CurveBookmarkManager(QtWidgets.QDialog):
 
     def __init__(self):
-        '''Creating the Window and calling out to functions'''
+        '''Initaliz the Window and Loads Existing Data'''
         super().__init__(parent=get_maya_main_window())
         self.setWindowTitle("Curve Bookmark Manager")
         self.resize(800, 800)
@@ -23,14 +24,14 @@ class CurveBookmarkManager(QtWidgets.QDialog):
 
         window_layout = QtWidgets.QHBoxLayout(self)
 
-        left_pannel = QtWidgets.QWidget()
-        left_pannel.setFixedWidth(200)
-        self.left_layout = QtWidgets.QVBoxLayout(left_pannel)
-        window_layout.addWidget(left_pannel)
+        left_panel = QtWidgets.QWidget()
+        left_panel.setFixedWidth(200)
+        self.left_layout = QtWidgets.QVBoxLayout(left_panel)
+        window_layout.addWidget(left_panel)
 
-        right_pannel = QtWidgets.QWidget()
-        self.right_layout = QtWidgets.QVBoxLayout(right_pannel)
-        window_layout.addWidget(right_pannel)
+        right_panel = QtWidgets.QWidget()
+        self.right_layout = QtWidgets.QVBoxLayout(right_panel)
+        window_layout.addWidget(right_panel)
 
         self.curve_list_ui()
         self.read_json()
@@ -38,7 +39,7 @@ class CurveBookmarkManager(QtWidgets.QDialog):
 
 
     def curve_list_ui(self):
-        '''Creates the pannel for curves on the leff'''
+        '''Creates the Left Panel for the List of Curves in Scene'''
         curve_group = QtWidgets.QGroupBox('Curves:')
         curve_layout = QtWidgets.QVBoxLayout()
 
@@ -54,7 +55,7 @@ class CurveBookmarkManager(QtWidgets.QDialog):
         self.left_layout.addWidget(list_refresh_button)
 
     def loadup_curve_list(self):
-        '''Loads the curves in the scene into the pannel'''
+        '''Loads Curves in the Scene into the Left Panel'''
         self.curve_list.clear()
 
         shape_node = cmds.ls(type="nurbsCurve")
@@ -62,27 +63,27 @@ class CurveBookmarkManager(QtWidgets.QDialog):
         transform_node = sorted(set(transform_node))
 
         bookmarked = []
-        nonbookmarked= []
+        non_bookmarked= []
 
         for curve_name in transform_node:
             if curve_name in self.saved_bookmarks:
                 bookmarked.append(curve_name)
             else:
-                nonbookmarked.append(curve_name)
+                non_bookmarked.append(curve_name)
 
-        for curve_name in bookmarked + nonbookmarked:
+        for curve_name in bookmarked + non_bookmarked:
             self.curve_list.addItem(curve_name)
     
     def when_curve_selected(self, item):
-        '''When a curve is selected it calls the bookmark view'''
+        '''When Curve is selected it Saves Name and Bring Up Right Panel'''
         self.selected_curve = item.text()
         self.show_bookmark_view()
    
     def show_bookmark_view(self):
-        '''Wipes right panel and displays selected curve bookmarks'''
+        '''Clears and Displays Bookmarks for Selected Curve'''
         self.clear_right_panel()
-        curve_bookmark_header = QtWidgets.QLabel(f"{self.selected_curve} Bookmarks:")
-        self.right_layout.addWidget(curve_bookmark_header)
+        bookmark_header = QtWidgets.QLabel(f"{self.selected_curve} Bookmarks:")
+        self.right_layout.addWidget(bookmark_header)
 
         if self.selected_curve in self.saved_bookmarks:
             for index, bookmark in enumerate(self.saved_bookmarks[self.selected_curve]):
@@ -95,6 +96,7 @@ class CurveBookmarkManager(QtWidgets.QDialog):
         self.right_layout.addWidget(new_bookmark_button)
 
     def bookmark_card_ui(self, bookmark, index):
+        '''Buids the Foundation for Bookmark View'''
         card_group = QtWidgets.QGroupBox(bookmark["name"])
         card_layout = QtWidgets.QVBoxLayout()
         
@@ -107,11 +109,13 @@ class CurveBookmarkManager(QtWidgets.QDialog):
 
         button_actions = QtWidgets.QHBoxLayout()
         frame_jump_button = QtWidgets.QPushButton("Jump to Frame")
-        frame_jump_button.clicked.connect(functools.partial(self.jump_to_frame, bookmark))
+        frame_jump_button.clicked.connect(functools.partial(self.jump_to_frame,
+                                                            bookmark))
         button_actions.addWidget(frame_jump_button)
 
         del_bookmark_button = QtWidgets.QPushButton("Delete Bookmark")
-        del_bookmark_button.clicked.connect(functools.partial(self.delete_bookmark, index))
+        del_bookmark_button.clicked.connect(functools.partial(
+                                            self.delete_bookmark, index))
         button_actions.addWidget(del_bookmark_button)
 
         card_layout.addLayout(button_actions)
@@ -119,10 +123,12 @@ class CurveBookmarkManager(QtWidgets.QDialog):
         self.right_layout.addWidget(card_group)
 
     def jump_to_frame(self, bookmark):
+        '''Moves timeline to First Frame of the Bookmark Selecting the Curve'''
         cmds.currentTime(bookmark["first_frame"])
         cmds.select(self.selected_curve)
 
     def delete_bookmark(self, index):
+        '''Removes Bookmark and Deletes Empty Keys'''
         self.saved_bookmarks[self.selected_curve].pop(index)
 
         if not self.saved_bookmarks[self.selected_curve]:
@@ -132,9 +138,9 @@ class CurveBookmarkManager(QtWidgets.QDialog):
         self.show_bookmark_view()
 
     def new_bookmark_form(self):
-        '''Creates a window for new bookmark information name, frames, desc'''
+        '''Rebuilds Window to Input Information Name, Frames, Desciption'''
         self.clear_right_panel()
-        form_group = QtWidgets.QGroupBox(f"Creating Bookmark for {self.selected_curve}")
+        form_group = QtWidgets.QGroupBox(f"Creating for {self.selected_curve}")
         form_layout = QtWidgets.QFormLayout()
         form_layout.setSpacing(10)
 
@@ -178,6 +184,7 @@ class CurveBookmarkManager(QtWidgets.QDialog):
         self.right_layout.addWidget(cancel_bookmark_button)
 
     def saving_bookmarks(self):
+        '''Ensures Bookmark Name to Save in Dictionary and Write to JSON'''
         bookmark_name = self.bookmark_name_input.text().strip()
         first_frame = self.first_frame_input.value()
         last_frame = self.last_frame_input.value()
@@ -199,45 +206,44 @@ class CurveBookmarkManager(QtWidgets.QDialog):
         self.show_bookmark_view()
 
     def clear_right_panel(self):
-        '''Removes all widgets on the rigtht panel'''
+        '''Removes All Widgets on Right Panel'''
         while self.right_layout.count():
             bookmarks = self.right_layout.takeAt(0)
             if bookmarks.widget():
                 bookmarks.widget().deleteLater()
 
     def create_json_path(self):
-        '''Find the path next to the Maya scene'''
+        '''Find a Path based on Maya Scene'''
         maya_scene_path = cmds.file(query=True, sceneName=True)
 
         if not maya_scene_path:
             QtWidgets.QMessageBox.warning(self, "Unsaved Scene",
-                                          "Please save Maya Scene to store Bookmarks.")
+                                          "Please save Maya Scene first.")
             return None
         
         scene_directory = os.path.dirname(maya_scene_path)
         scene_name = os.path.splitext(os.path.basename(maya_scene_path))[0]
-        return os.path.join(scene_directory, f"{scene_name}_curve_bookmarks.json")
+        return os.path.join(scene_directory,
+                            f"{scene_name}_curve_bookmarks.json")
     
     def write_to_json(self):
-        '''Writes to a JSON file saving the Bookmark information'''
+        '''Writes to JSON File Saving the Bookmark Information'''
         jason_path = self.create_json_path()
 
         if not jason_path:
             return
         
-        with open(jason_path, "w") as json__file:
-            json.dump(self.saved_bookmarks, json__file, indent=4)
+        with open(jason_path, "w") as json_file:
+            json.dump(self.saved_bookmarks, json_file, indent=4)
     
     def read_json(self):
+        '''Reads JSON File and Restores Saved Bookmarks'''
         json_path = self.create_json_path()
 
         if not json_path:
             return
         
-        if not os.path.exists(json_path):
-            return
-        
-        if os.path.getsize(json_path) == 0:
+        if not os.path.exists(json_path) or os.path.getsize(json_path) == 0:
             return
         
         with open(json_path, "r") as json_file:
@@ -245,6 +251,7 @@ class CurveBookmarkManager(QtWidgets.QDialog):
 
 
 def show_ui():
+    '''Displays the Curve Bookmark Manager Window'''
     ui = CurveBookmarkManager()
     ui.show()
     return ui
