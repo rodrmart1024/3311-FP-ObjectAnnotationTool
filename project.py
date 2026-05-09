@@ -48,6 +48,10 @@ class CurveBookmarkManager(QtWidgets.QDialog):
         curve_group.setLayout(curve_layout)
         self.left_layout.addWidget(curve_group)
         self.curve_list.itemClicked.connect(self.when_curve_selected)
+        
+        list_refresh_button = QtWidgets.QPushButton("Refresh")
+        list_refresh_button.clicked.connect(self.loadup_curve_list)
+        self.left_layout.addWidget(list_refresh_button)
 
     def loadup_curve_list(self):
         '''Loads the curves in the scene into the pannel'''
@@ -80,21 +84,21 @@ class CurveBookmarkManager(QtWidgets.QDialog):
         curve_bookmark_header = QtWidgets.QLabel(f"{self.selected_curve} Bookmarks:")
         self.right_layout.addWidget(curve_bookmark_header)
 
-        new_bookmark_button = QtWidgets.QPushButton("New Bookmark")
-        new_bookmark_button.clicked.connect(self.new_bookmark_form)
-        self.right_layout.addWidget(new_bookmark_button)
-
         if self.selected_curve in self.saved_bookmarks:
             for index, bookmark in enumerate(self.saved_bookmarks[self.selected_curve]):
                 self.bookmark_card_ui(bookmark, index)
 
         self.right_layout.addStretch()
 
+        new_bookmark_button = QtWidgets.QPushButton("New Bookmark")
+        new_bookmark_button.clicked.connect(self.new_bookmark_form)
+        self.right_layout.addWidget(new_bookmark_button)
+
     def bookmark_card_ui(self, bookmark, index):
         card_group = QtWidgets.QGroupBox(bookmark["name"])
         card_layout = QtWidgets.QVBoxLayout()
         
-        frame_label = QtWidgets.QLabel(f"{bookmark['frames']}")
+        frame_label = QtWidgets.QLabel(f"{bookmark['first_frame']} to {bookmark['last_frame']}")
         card_layout.addWidget(frame_label)
 
         description_label = QtWidgets.QLabel(f"{bookmark['desc']}")
@@ -115,7 +119,7 @@ class CurveBookmarkManager(QtWidgets.QDialog):
         self.right_layout.addWidget(card_group)
 
     def jump_to_frame(self, bookmark):
-        cmds.currentTime(bookmark["frames"])
+        cmds.currentTime(bookmark["first_frame"])
         cmds.select(self.selected_curve)
 
     def delete_bookmark(self, index):
@@ -136,12 +140,22 @@ class CurveBookmarkManager(QtWidgets.QDialog):
 
         self.bookmark_name_input = QtWidgets.QLineEdit()
         form_layout.addRow("Bookmark Name: ", self.bookmark_name_input)
+        frame_range_layout = QtWidgets.QHBoxLayout()
 
-        self.frames_input = QtWidgets.QSpinBox()
-        self.frames_input.setValue(int(cmds.currentTime(query=True)))
-        self.frames_input.setMinimum(-10000)
-        self.frames_input.setMaximum(10000)
-        form_layout.addRow("Frame or Frame Range: ", self.frames_input)
+        self.first_frame_input = QtWidgets.QSpinBox()
+        self.first_frame_input.setMinimum(-10000)
+        self.first_frame_input.setMaximum(10000)
+        self.first_frame_input.setValue(int(cmds.currentTime(query=True)))
+        frame_range_layout.addWidget(self.first_frame_input)
+
+        frame_range_layout.addWidget(QtWidgets.QLabel(" to "))
+        self.last_frame_input = QtWidgets.QSpinBox()
+        self.last_frame_input.setMinimum(-10000)
+        self.last_frame_input.setMaximum(10000)
+        self.last_frame_input.setValue(int(cmds.currentTime(query=True)))
+        frame_range_layout.addWidget(self.last_frame_input)
+
+        form_layout.addRow("Frame or Frame Range: ", frame_range_layout)
 
         self.description_input = QtWidgets.QTextEdit()
         self.description_input.setFixedHeight(80)
@@ -165,7 +179,8 @@ class CurveBookmarkManager(QtWidgets.QDialog):
 
     def saving_bookmarks(self):
         bookmark_name = self.bookmark_name_input.text().strip()
-        frames = self.frames_input.value()
+        first_frame = self.first_frame_input.value()
+        last_frame = self.last_frame_input.value()
         description = self.description_input.toPlainText().strip()
 
         if not bookmark_name:
@@ -177,7 +192,8 @@ class CurveBookmarkManager(QtWidgets.QDialog):
             self.saved_bookmarks[self.selected_curve] = []
         
         self.saved_bookmarks[self.selected_curve].append(
-            {"name": bookmark_name, "frames": frames, "desc": description})
+            {"name": bookmark_name, "first_frame": first_frame,
+             "last_frame": last_frame, "desc": description})
         
         self.write_to_json()        
         self.show_bookmark_view()
